@@ -4,8 +4,11 @@ from mesa.time import RandomActivation
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import Slider
+<<<<<<< HEAD
 from mesa.datacollection import DataCollector
 from mesa.visualization.modules import ChartModule
+=======
+>>>>>>> b7a149d16676704927c8c114b7c8377b986a9562
 
 
 class WallBlock(Agent):
@@ -368,8 +371,11 @@ def agent_portrayal(agent):
 
 grid = CanvasGrid(agent_portrayal, 51, 51, 700, 700)
 
+<<<<<<< HEAD
 chart = ChartModule([{"Label": "Trash Recollected", "Color": "Red"}], data_collector_name= "datacollector")
 
+=======
+>>>>>>> b7a149d16676704927c8c114b7c8377b986a9562
 server = ModularServer(Maze, [grid], "Robot", {"density": Slider("Tree density", 0.45, 0.01, 1.0, 0.01)})
 server.port = 8522
 server.launch()
