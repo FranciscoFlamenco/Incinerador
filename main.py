@@ -178,48 +178,29 @@ class Robot(Agent):
     #       mover a incinerador
 
     def goToIncinerator(self, current_x, current_y, save_pos, trashId):
-
         xDistancePos = save_pos[0] - current_x
         yDistancePos = save_pos[1] - current_y
 
         xDistanceIncinerator = 25 - current_x
         yDistanceIncinerator = 25 - current_y
 
-        if (xDistanceIncinerator >= 2) & (self.carriesTrash == 1) & (xDistanceIncinerator > 0):
-            current_x += 1
-            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
-                    abs(xDistanceIncinerator) < 2):
-                pass
-            else:
-                self.model.grid.move_agent(self, (current_x, current_y))
+        if self.carriesTrash == 1:
+            if abs(xDistanceIncinerator) <= 2 and abs(yDistanceIncinerator) <= 2:
+                self.model.grid.move_agent(self, (25, 25))
                 self.model.grid.move_agent(self.model.schedule.agents[trashId], self.pos)
+                self.carriesTrash = 0
+            else:
+                if xDistanceIncinerator > 0:
+                    current_x += 1
+                elif xDistanceIncinerator < 0:
+                    current_x -= 1
 
-        elif (yDistanceIncinerator >= 2) & (self.carriesTrash == 1) & (yDistanceIncinerator > 0):
-            current_y += 1
-            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
-                    abs(xDistanceIncinerator) < 2):
-                pass
-            else:
-                self.model.grid.move_agent(self, (current_x, current_y))
-                self.model.grid.move_agent(self.model.schedule.agents[trashId], self.pos)
+                if yDistanceIncinerator > 0:
+                    current_y += 1
+                elif yDistanceIncinerator < 0:
+                    current_y -= 1
 
-        elif (abs(xDistanceIncinerator) >= 2) & (self.carriesTrash == 1) & (xDistanceIncinerator < 0):
-            current_x -= 1
-            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
-                    abs(xDistanceIncinerator) < 2):
-                pass
-            else:
                 self.model.grid.move_agent(self, (current_x, current_y))
-                self.model.grid.move_agent(self.model.schedule.agents[trashId], self.pos)
-
-        elif (abs(yDistanceIncinerator) >= 2) & (self.carriesTrash == 1) & (yDistanceIncinerator < 0):
-            current_y -= 1
-            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
-                    abs(xDistanceIncinerator) < 2):
-                pass
-            else:
-                self.model.grid.move_agent(self, (current_x, current_y))
-                self.model.grid.move_agent(self.model.schedule.agents[trashId], self.pos)
 
         else:
             self.carriesTrash = 0
@@ -241,6 +222,9 @@ class Robot(Agent):
 
             else:
                 self.hasTrash = 0
+                self.model.grid.move_agent(self, save_pos)
+
+        
 
     def step(self):
         self.steps += 1
@@ -311,7 +295,7 @@ class Maze(Model):
         trash3 = Trash(self, (11, 1))
         trash4 = Trash(self, (46, 45))
         trash5 = Trash(self, (41, 12))
-        wallblock = WallBlock(self, (0, 0))
+        wallBlock = WallBlock(self, (0, 0))
 
         self.grid.place_agent(robot, robot.pos)
         self.grid.place_agent(robot1, robot1.pos)
