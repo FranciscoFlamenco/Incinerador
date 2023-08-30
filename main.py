@@ -6,7 +6,6 @@ from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import Slider
 
 
-
 class WallBlock(Agent):
     def __init__(self, model, pos):
         super().__init__(model.next_id(), model)
@@ -32,10 +31,9 @@ class RobotIncinerador(Agent):
         self.counter = 0
         self.movement = 0
         self.hasTrash = 0
-        self.save_pos = (0,0)
+        self.save_pos = (0, 0)
         self.trashId = 0
         self.carriesTrash = 1
-
 
     def goToIncinerator(self, save_pos, trashId):
         if self.carriesTrash == 1:
@@ -45,7 +43,7 @@ class RobotIncinerador(Agent):
                     break
                     pass
             else:
-                self.model.grid.move_agent(self, (25,25))
+                self.model.grid.move_agent(self, (25, 25))
                 self.model.grid.move_agent(self.model.schedule.agents[trashId], self.pos)
                 self.carriesTrash = 0
         else:
@@ -185,10 +183,10 @@ class Robot(Agent):
         xDistanceIncinerator = 25 - current_x
         yDistanceIncinerator = 25 - current_y
 
-
         if (xDistanceIncinerator >= 2) & (self.carriesTrash == 1) & (xDistanceIncinerator > 0):
             current_x += 1
-            if not self.model.grid.is_cell_empty((current_x, current_y)):
+            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
+                    abs(xDistanceIncinerator) < 2):
                 pass
             else:
                 self.model.grid.move_agent(self, (current_x, current_y))
@@ -196,7 +194,8 @@ class Robot(Agent):
 
         elif (yDistanceIncinerator >= 2) & (self.carriesTrash == 1) & (yDistanceIncinerator > 0):
             current_y += 1
-            if not self.model.grid.is_cell_empty((current_x, current_y)):
+            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
+                    abs(xDistanceIncinerator) < 2):
                 pass
             else:
                 self.model.grid.move_agent(self, (current_x, current_y))
@@ -204,7 +203,8 @@ class Robot(Agent):
 
         elif (abs(xDistanceIncinerator) >= 2) & (self.carriesTrash == 1) & (xDistanceIncinerator < 0):
             current_x -= 1
-            if not self.model.grid.is_cell_empty((current_x, current_y)):
+            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
+                    abs(xDistanceIncinerator) < 2):
                 pass
             else:
                 self.model.grid.move_agent(self, (current_x, current_y))
@@ -212,7 +212,8 @@ class Robot(Agent):
 
         elif (abs(yDistanceIncinerator) >= 2) & (self.carriesTrash == 1) & (yDistanceIncinerator < 0):
             current_y -= 1
-            if not self.model.grid.is_cell_empty((current_x, current_y)):
+            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
+                    abs(xDistanceIncinerator) < 2):
                 pass
             else:
                 self.model.grid.move_agent(self, (current_x, current_y))
@@ -287,16 +288,12 @@ class Incinerador(Agent):
 
 
 class Maze(Model):
-    def __init__(self, density = .10):
+    def __init__(self, density=.10):
         super().__init__()
 
         self.schedule = RandomActivation(self)
         self.grid = MultiGrid(51, 51, torus=False)
-        for _,(x,y) in self.grid.coord_iter():
-            if self.random.random() < density:
-                trash = Trash(self, (x,y))
-                self.grid.place_agent(trash, (x,y))
-                self.schedule.add(trash)
+
         robot = Robot(self, (0, 0))
         robot1 = Robot(self, (50, 0))
         robot2 = Robot(self, (0, 50))
@@ -307,6 +304,9 @@ class Maze(Model):
         trash = Trash(self, (10, 1))
         trash1 = Trash(self, (45, 45))
         trash2 = Trash(self, (40, 12))
+        trash3 = Trash(self, (11, 1))
+        trash4 = Trash(self, (46, 45))
+        trash5 = Trash(self, (41, 12))
         wallblock = WallBlock(self, (0, 0))
 
         self.grid.place_agent(robot, robot.pos)
@@ -320,6 +320,10 @@ class Maze(Model):
         self.grid.place_agent(trash2, trash2.pos)
         self.grid.place_agent(trash1, trash1.pos)
 
+        self.grid.place_agent(trash3, trash3.pos)
+        self.grid.place_agent(trash4, trash4.pos)
+        self.grid.place_agent(trash5, trash5.pos)
+
         self.schedule.add(robot)
         self.schedule.add(robot1)
         self.schedule.add(robot2)
@@ -329,7 +333,17 @@ class Maze(Model):
         self.schedule.add(trash)
         self.schedule.add(trash1)
         self.schedule.add(trash2)
+
+        self.schedule.add(trash3)
+        self.schedule.add(trash4)
+        self.schedule.add(trash5)
         self.schedule.add(incinerador)
+
+        for _,(x,y) in self.grid.coord_iter():
+            if (self.random.random() * 2) < density:
+                trash = Trash(self, (x,y))
+                self.grid.place_agent(trash, (x,y))
+                self.schedule.add(trash)
 
     def step(self):
         self.schedule.step()
@@ -352,6 +366,6 @@ def agent_portrayal(agent):
 
 grid = CanvasGrid(agent_portrayal, 51, 51, 700, 700)
 
-server = ModularServer(Maze, [grid], "Robot", { "density": Slider("Tree density", 0.45, 0.01, 1.0, 0.01)})
+server = ModularServer(Maze, [grid], "Robot", {"density": Slider("Tree density", 0.45, 0.01, 1.0, 0.01)})
 server.port = 8522
 server.launch()
