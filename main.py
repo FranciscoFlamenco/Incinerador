@@ -368,6 +368,8 @@ def agent_portrayal(agent):
 
 grid = CanvasGrid(agent_portrayal, 51, 51, 700, 700)
 
+chart = ChartModule([{"Label": "Trash Recollected", "Color": "Red"}], data_collector_name= "datacollector")
+
 server = ModularServer(Maze, [grid], "Robot", {"density": Slider("Tree density", 0.45, 0.01, 1.0, 0.01)})
 server.port = 8522
 server.launch()
