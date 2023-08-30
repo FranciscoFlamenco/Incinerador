@@ -4,9 +4,8 @@ from mesa.time import RandomActivation
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import Slider
-#from mesa.datacollection import DataCollector
+from mesa.datacollection import DataCollector
 from mesa.visualization.modules import ChartModule
-
 
 class WallBlock(Agent):
     def __init__(self, model, pos):
@@ -104,6 +103,7 @@ class Robot(Agent):
         self.carriesTrash = 1
         self.hasTrash = 0
         self.trashId = 0
+        self.steps = 0
 
         if self.pos == (0, 0):
             self.matrix = [[0 for _ in range(53)] for _ in range(53)]
@@ -243,6 +243,7 @@ class Robot(Agent):
                 self.hasTrash = 0
 
     def step(self):
+        self.steps += 1
         current_x, current_y = self.pos
 
         if self.hasTrash != 1:
@@ -290,9 +291,9 @@ class Incinerador(Agent):
 
 
 class Maze(Model):
+    
     def __init__(self, density=.10):
         super().__init__()
-
         self.schedule = RandomActivation(self)
         self.grid = MultiGrid(51, 51, torus=False)
 
@@ -301,6 +302,7 @@ class Maze(Model):
         robot2 = Robot(self, (0, 50))
         robot3 = Robot(self, (50, 50))
         robot4 = RobotIncinerador(self, (26, 24))
+        self.datacollector = DataCollector(model_reporters={"CleanCells": "count_clean_cells"})
 
         incinerador = Incinerador(self, (25, 25))
         trash = Trash(self, (10, 1))
@@ -346,14 +348,20 @@ class Maze(Model):
                 trash = Trash(self, (x,y))
                 self.grid.place_agent(trash, (x,y))
                 self.schedule.add(trash)
+                
+                
+    def count_clean_cells(self):
+        return sum(1 for x in range(self.grid.width) for y in range(self.grid.height)
+                   if len(self.grid.get_cell_list_contents((x, y))) == 0)
 
     def step(self):
         self.schedule.step()
+        self.datacollector.collect(self)
 
 
 def agent_portrayal(agent):
     if type(agent) == Robot:
-        return {"Shape": "robot.png", "Layer": 0}
+        return {"Shape": "robot.png", "Layer": 0, "text": agent.steps}
     elif type(agent) == WallBlock:
         return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Blue", "Layer": 0}
     elif type(agent) == Trash:
@@ -368,8 +376,8 @@ def agent_portrayal(agent):
 
 grid = CanvasGrid(agent_portrayal, 51, 51, 700, 700)
 
-chart = ChartModule([{"Label": "Trash Recollected", "Color": "Red"}], data_collector_name= "datacollector")
+chart = ChartModule([{"Label": "Trash Recollected", "Color": "Red"}, {"Label": "Clean Cells", "Color": "Green"}], data_collector_name= "datacollector")
 
-server = ModularServer(Maze, [grid], "Robot", {"density": Slider("Tree density", 0.45, 0.01, 1.0, 0.01)})
+server = ModularServer(Maze, [grid, chart], "Robot", {"density": Slider("Trash Density", 0.45, 0.01, 1.0, 0.01)})
 server.port = 8522
 server.launch()
