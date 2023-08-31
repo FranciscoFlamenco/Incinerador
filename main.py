@@ -346,6 +346,8 @@ class Maze(Model):
 def agent_portrayal(agent):
     if type(agent) == Robot:
         return {"Shape": "robot.png", "Layer": 0, "text": agent.steps}
+    elif type(agent) == Maze:
+        return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "White", "Layer": 0, "text": agent.count_clean_cells()}
     elif type(agent) == WallBlock:
         return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Blue", "Layer": 0}
     elif type(agent) == Trash:
@@ -360,8 +362,9 @@ def agent_portrayal(agent):
 
 grid = CanvasGrid(agent_portrayal, 51, 51, 700, 700)
 
-chart = ChartModule([{"Label": "Trash Recollected", "Color": "Red"}, {"Label": "Clean Cells", "Color": "Green"}], data_collector_name= "datacollector")
+clean_cells_chart = ChartModule([{"Label": "Clean Cells", "Color": "Green"}], data_collector_name="datacollector")
+chart = ChartModule([{"Label": "Trash Recollected", "Color": "Red"}])
 
-server = ModularServer(Maze, [grid, chart], "Robot", {"density": Slider("Trash Density", 0.45, 0.01, 1.0, 0.01)})
+server = ModularServer(Maze, [grid, chart, clean_cells_chart], "Robot", {"density": Slider("Trash Density", 0.45, 0.01, 1.0, 0.01)})
 server.port = 8522
 server.launch()
