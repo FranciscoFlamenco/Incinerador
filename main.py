@@ -4,8 +4,7 @@ from mesa.time import RandomActivation
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import Slider
-from mesa.datacollection import DataCollector
-from mesa.visualization.modules import ChartModule
+
 
 class WallBlock(Agent):
     def __init__(self, model, pos):
@@ -38,14 +37,16 @@ class RobotIncinerador(Agent):
 
     def goToIncinerator(self, save_pos, trashId):
         if self.carriesTrash == 1:
-            agents_in_target_square = self.model.grid.get_cell_list_contents([(25, 25)])
+            agents_in_target_square = self.model.grid.get_cell_list_contents([
+                                                                             (10, 10)])
             for agent in agents_in_target_square:
                 if isinstance(agent, Trash):
                     break
                     pass
             else:
-                self.model.grid.move_agent(self, (25, 25))
-                self.model.grid.move_agent(self.model.schedule.agents[trashId], self.pos)
+                self.model.grid.move_agent(self, (10, 10))
+                self.model.grid.move_agent(
+                    self.model.schedule.agents[trashId], self.pos)
                 self.carriesTrash = 0
         else:
             self.model.grid.move_agent(self, save_pos)
@@ -56,7 +57,7 @@ class RobotIncinerador(Agent):
             for i in range(len(self.model.schedule.agents)):
                 if isinstance(self.model.schedule.agents[i], Trash):
                     trash = self.model.schedule.agents[i].pos
-                    if (self.pos == trash) & (self.pos != (25, 25)):
+                    if (self.pos == trash) & (self.pos != (10, 10)):
                         self.carriesTrash = 1
                         self.hasTrash = 1
                         self.trashId = i
@@ -103,73 +104,72 @@ class Robot(Agent):
         self.carriesTrash = 1
         self.hasTrash = 0
         self.trashId = 0
-        self.steps = 0
 
         if self.pos == (0, 0):
-            self.matrix = [[0 for _ in range(53)] for _ in range(53)]
+            self.matrix = [[0 for _ in range(23)] for _ in range(23)]
             for row in self.matrix:
-                row[25] = 1
+                row[10] = 1
 
             # Creating the horizontal line
-            self.matrix[25] = [1] * 51
+            self.matrix[10] = [1] * 21
 
-            self.matrix[24][24] = 1
-            self.matrix[26][24] = 1
-            self.matrix[24][26] = 1
-            self.matrix[26][26] = 1
+            self.matrix[9][9] = 1
+            self.matrix[11][9] = 1
+            self.matrix[9][11] = 1
+            self.matrix[11][11] = 1
             self.matrix[0][0] = 1
-            self.matrix[50][50] = 1
-            self.matrix[0][50] = 1
-            self.matrix[50][0] = 1
-        elif self.pos == (50, 0):
-            self.matrix = [[0 for _ in range(53)] for _ in range(53)]
+            self.matrix[20][20] = 1
+            self.matrix[0][20] = 1
+            self.matrix[20][0] = 1
+        elif self.pos == (20, 0):
+            self.matrix = [[0 for _ in range(23)] for _ in range(23)]
             for row in self.matrix:
-                row[25] = 1
+                row[10] = 1
 
             # Creating the horizontal line
-            self.matrix[24] = [1] * 51
+            self.matrix[9] = [1] * 21
 
-            self.matrix[24][24] = 1
-            self.matrix[26][24] = 1
-            self.matrix[24][26] = 1
-            self.matrix[26][26] = 1
-            self.matrix[25][24] = 1
+            self.matrix[9][9] = 1
+            self.matrix[11][9] = 1
+            self.matrix[9][11] = 1
+            self.matrix[11][11] = 1
+            self.matrix[10][9] = 1
             self.matrix[0][0] = 1
-            self.matrix[50][50] = 1
-            self.matrix[0][50] = 1
-            self.matrix[50][0] = 1
-        elif self.pos == (50, 50):
-            self.matrix = [[0 for _ in range(53)] for _ in range(53)]
+            self.matrix[20][20] = 1
+            self.matrix[0][20] = 1
+            self.matrix[20][0] = 1
+        elif self.pos == (20, 20):
+            self.matrix = [[0 for _ in range(23)] for _ in range(23)]
             for row in self.matrix:
-                row[24] = 1
+                row[9] = 1
 
             # Creating the horizontal line
-            self.matrix[24] = [1] * 51
+            self.matrix[9] = [1] * 21
 
-            self.matrix[24][24] = 1
-            self.matrix[26][24] = 1
-            self.matrix[24][26] = 1
-            self.matrix[26][26] = 1
+            self.matrix[9][9] = 1
+            self.matrix[11][9] = 1
+            self.matrix[9][11] = 1
+            self.matrix[11][11] = 1
             self.matrix[0][0] = 1
-            self.matrix[50][50] = 1
-            self.matrix[0][50] = 1
-            self.matrix[50][0] = 1
-        elif self.pos == (0, 50):
-            self.matrix = [[0 for _ in range(53)] for _ in range(53)]
+            self.matrix[20][20] = 1
+            self.matrix[0][20] = 1
+            self.matrix[20][0] = 1
+        elif self.pos == (0, 20):
+            self.matrix = [[0 for _ in range(23)] for _ in range(23)]
             for row in self.matrix:
-                row[24] = 1
+                row[9] = 1
 
             # Creating the horizontal line
-            self.matrix[25] = [1] * 51
+            self.matrix[10] = [1] * 21
 
-            self.matrix[24][24] = 1
-            self.matrix[26][24] = 1
-            self.matrix[24][26] = 1
-            self.matrix[26][26] = 1
+            self.matrix[9][9] = 1
+            self.matrix[11][9] = 1
+            self.matrix[9][11] = 1
+            self.matrix[11][11] = 1
             self.matrix[0][0] = 1
-            self.matrix[50][50] = 1
-            self.matrix[0][50] = 1
-            self.matrix[50][0] = 1
+            self.matrix[20][20] = 1
+            self.matrix[0][20] = 1
+            self.matrix[20][0] = 1
 
     #         estado incinerador = self.model.schedule.agents[5].estado
     # si estado incinerador es prendido:
@@ -178,29 +178,52 @@ class Robot(Agent):
     #       mover a incinerador
 
     def goToIncinerator(self, current_x, current_y, save_pos, trashId):
+
         xDistancePos = save_pos[0] - current_x
         yDistancePos = save_pos[1] - current_y
 
-        xDistanceIncinerator = 25 - current_x
-        yDistanceIncinerator = 25 - current_y
+        xDistanceIncinerator = 10 - current_x
+        yDistanceIncinerator = 10 - current_y
 
-        if self.carriesTrash == 1:
-            if abs(xDistanceIncinerator) <= 2 and abs(yDistanceIncinerator) <= 2:
-                self.model.grid.move_agent(self, (25, 25))
-                self.model.grid.move_agent(self.model.schedule.agents[trashId], self.pos)
-                self.carriesTrash = 0
+        if (xDistanceIncinerator >= 2) & (self.carriesTrash == 1) & (xDistanceIncinerator > 0):
+            current_x += 1
+            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
+                    abs(xDistanceIncinerator) < 2):
+                pass
             else:
-                if xDistanceIncinerator > 0:
-                    current_x += 1
-                elif xDistanceIncinerator < 0:
-                    current_x -= 1
-
-                if yDistanceIncinerator > 0:
-                    current_y += 1
-                elif yDistanceIncinerator < 0:
-                    current_y -= 1
-
                 self.model.grid.move_agent(self, (current_x, current_y))
+                self.model.grid.move_agent(
+                    self.model.schedule.agents[trashId], self.pos)
+
+        elif (yDistanceIncinerator >= 2) & (self.carriesTrash == 1) & (yDistanceIncinerator > 0):
+            current_y += 1
+            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
+                    abs(xDistanceIncinerator) < 2):
+                pass
+            else:
+                self.model.grid.move_agent(self, (current_x, current_y))
+                self.model.grid.move_agent(
+                    self.model.schedule.agents[trashId], self.pos)
+
+        elif (abs(xDistanceIncinerator) >= 2) & (self.carriesTrash == 1) & (xDistanceIncinerator < 0):
+            current_x -= 1
+            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
+                    abs(xDistanceIncinerator) < 2):
+                pass
+            else:
+                self.model.grid.move_agent(self, (current_x, current_y))
+                self.model.grid.move_agent(
+                    self.model.schedule.agents[trashId], self.pos)
+
+        elif (abs(yDistanceIncinerator) >= 2) & (self.carriesTrash == 1) & (yDistanceIncinerator < 0):
+            current_y -= 1
+            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
+                    abs(xDistanceIncinerator) < 2):
+                pass
+            else:
+                self.model.grid.move_agent(self, (current_x, current_y))
+                self.model.grid.move_agent(
+                    self.model.schedule.agents[trashId], self.pos)
 
         else:
             self.carriesTrash = 0
@@ -222,12 +245,8 @@ class Robot(Agent):
 
             else:
                 self.hasTrash = 0
-                self.model.grid.move_agent(self, save_pos)
-
-        
 
     def step(self):
-        self.steps += 1
         current_x, current_y = self.pos
 
         if self.hasTrash != 1:
@@ -242,16 +261,19 @@ class Robot(Agent):
                         break
 
         if self.hasTrash == 1:
-            self.goToIncinerator(current_x, current_y, self.save_pos, self.trashId)
+            self.goToIncinerator(current_x, current_y,
+                                 self.save_pos, self.trashId)
         else:
             possible_moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]
             for dx, dy in possible_moves:
                 possible_next_move = (current_x + dx, current_y + dy)
-                mat_coords = self.matrix[possible_next_move[0]][possible_next_move[1]]
+                mat_coords = self.matrix[possible_next_move[0]
+                                         ][possible_next_move[1]]
                 if mat_coords != 1 and not self.model.grid.out_of_bounds(possible_next_move):
                     next_move = possible_next_move
                     self.matrix[next_move[0]][next_move[1]] = 1
-                    self.model.grid.place_agent(WallBlock(self.model, self.pos), self.pos)
+                    self.model.grid.place_agent(
+                        WallBlock(self.model, self.pos), self.pos)
                     self.model.grid.move_agent(self, next_move)
                     break
 
@@ -264,7 +286,8 @@ class Incinerador(Agent):
 
     def step(self):
         self.type = 0
-        agents_in_target_square = self.model.grid.get_cell_list_contents([(25, 25)])
+        agents_in_target_square = self.model.grid.get_cell_list_contents([
+                                                                         (10, 10)])
         for agent in agents_in_target_square:
             if isinstance(agent, Robot):
                 break
@@ -275,27 +298,26 @@ class Incinerador(Agent):
 
 
 class Maze(Model):
-    
-    def __init__(self, density=.10):
+    def __init__(self, density=.10, stepslimit=10000):
         super().__init__()
+
         self.schedule = RandomActivation(self)
-        self.grid = MultiGrid(51, 51, torus=False)
+        self.grid = MultiGrid(21, 21, torus=False)
 
         robot = Robot(self, (0, 0))
-        robot1 = Robot(self, (50, 0))
-        robot2 = Robot(self, (0, 50))
-        robot3 = Robot(self, (50, 50))
-        robot4 = RobotIncinerador(self, (26, 24))
-        self.datacollector = DataCollector(model_reporters={"CleanCells": "count_clean_cells"})
+        robot1 = Robot(self, (20, 0))
+        robot2 = Robot(self, (0, 20))
+        robot3 = Robot(self, (20, 20))
+        robot4 = RobotIncinerador(self, (11, 9))
 
-        incinerador = Incinerador(self, (25, 25))
+        incinerador = Incinerador(self, (10, 10))
         trash = Trash(self, (10, 1))
-        trash1 = Trash(self, (45, 45))
-        trash2 = Trash(self, (40, 12))
+        trash1 = Trash(self, (15, 15))
+        trash2 = Trash(self, (10, 12))
         trash3 = Trash(self, (11, 1))
-        trash4 = Trash(self, (46, 45))
-        trash5 = Trash(self, (41, 12))
-        wallBlock = WallBlock(self, (0, 0))
+        trash4 = Trash(self, (16, 15))
+        trash5 = Trash(self, (11, 12))
+        wallblock = WallBlock(self, (0, 0))
 
         self.grid.place_agent(robot, robot.pos)
         self.grid.place_agent(robot1, robot1.pos)
@@ -327,27 +349,23 @@ class Maze(Model):
         self.schedule.add(trash5)
         self.schedule.add(incinerador)
 
-        for _,(x,y) in self.grid.coord_iter():
+        self.stepslimit = stepslimit
+
+        for _, (x, y) in self.grid.coord_iter():
             if (self.random.random() * 2) < density:
-                trash = Trash(self, (x,y))
-                self.grid.place_agent(trash, (x,y))
+                trash = Trash(self, (x, y))
+                self.grid.place_agent(trash, (x, y))
                 self.schedule.add(trash)
-                
-                
-    def count_clean_cells(self):
-        return sum(1 for x in range(self.grid.width) for y in range(self.grid.height)
-                   if len(self.grid.get_cell_list_contents((x, y))) == 0)
 
     def step(self):
+        if(self.schedule.time + 2 > self.stepslimit):
+            self.running = False
         self.schedule.step()
-        self.datacollector.collect(self)
 
 
 def agent_portrayal(agent):
     if type(agent) == Robot:
-        return {"Shape": "robot.png", "Layer": 0, "text": agent.steps}
-    elif type(agent) == Maze:
-        return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "White", "Layer": 0, "text": agent.count_clean_cells()}
+        return {"Shape": "robot.png", "Layer": 0}
     elif type(agent) == WallBlock:
         return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Blue", "Layer": 0}
     elif type(agent) == Trash:
@@ -360,11 +378,9 @@ def agent_portrayal(agent):
         return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Red", "Layer": 0}
 
 
-grid = CanvasGrid(agent_portrayal, 51, 51, 700, 700)
+grid = CanvasGrid(agent_portrayal, 21, 21, 700, 700)
 
-clean_cells_chart = ChartModule([{"Label": "Clean Cells", "Color": "Green"}], data_collector_name="datacollector")
-chart = ChartModule([{"Label": "Trash Recollected", "Color": "Red"}])
-
-server = ModularServer(Maze, [grid, chart, clean_cells_chart], "Robot", {"density": Slider("Trash Density", 0.45, 0.01, 1.0, 0.01)})
+server = ModularServer(Maze, [grid], "Robot", {
+                       "density": Slider("Tree density", 0.45, 0.01, 1.0, 0.01), "stepslimit": Slider("Steps Limiter", 10000, 1, 20000, 10)})
 server.port = 8522
 server.launch()
