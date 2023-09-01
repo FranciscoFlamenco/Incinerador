@@ -4,6 +4,8 @@ from mesa.time import RandomActivation
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import Slider
+from mesa.datacollection import DataCollector
+from mesa.visualization.modules import ChartModule
 from mesa.visualization.UserParam import Checkbox
 
 gridnum = 51
@@ -109,7 +111,9 @@ class Robot(Agent):
         self.carriesTrash = 1
         self.hasTrash = 0
         self.trashId = 0
+
         self.gridnum = num
+        self.steps = 0
 
         if self.pos == (0, 0):
             self.matrix = [[0 for _ in range(self.gridnum + 1)]
@@ -212,45 +216,25 @@ class Robot(Agent):
         xDistanceIncinerator = int((num - 1) / 2) - current_x
         yDistanceIncinerator = int((num - 1) / 2) - current_y
 
-        if (xDistanceIncinerator >= 2) & (self.carriesTrash == 1) & (xDistanceIncinerator > 0):
-            current_x += 1
-            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
-                    abs(xDistanceIncinerator) < 2):
-                pass
-            else:
-                self.model.grid.move_agent(self, (current_x, current_y))
+        if self.carriesTrash == 1:
+            if abs(xDistanceIncinerator) <= 2 and abs(yDistanceIncinerator) <= 2:
+                self.model.grid.move_agent(
+                    self, (int((self.gridnum - 1) / 2), int((self.gridnum - 1) / 2)))
                 self.model.grid.move_agent(
                     self.model.schedule.agents[trashId], self.pos)
+                self.carriesTrash = 0
+            else:
+                if xDistanceIncinerator > 0:
+                    current_x += 1
+                elif xDistanceIncinerator < 0:
+                    current_x -= 1
 
-        elif (yDistanceIncinerator >= 2) & (self.carriesTrash == 1) & (yDistanceIncinerator > 0):
-            current_y += 1
-            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
-                    abs(xDistanceIncinerator) < 2):
-                pass
-            else:
-                self.model.grid.move_agent(self, (current_x, current_y))
-                self.model.grid.move_agent(
-                    self.model.schedule.agents[trashId], self.pos)
+                if yDistanceIncinerator > 0:
+                    current_y += 1
+                elif yDistanceIncinerator < 0:
+                    current_y -= 1
 
-        elif (abs(xDistanceIncinerator) >= 2) & (self.carriesTrash == 1) & (xDistanceIncinerator < 0):
-            current_x -= 1
-            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
-                    abs(xDistanceIncinerator) < 2):
-                pass
-            else:
                 self.model.grid.move_agent(self, (current_x, current_y))
-                self.model.grid.move_agent(
-                    self.model.schedule.agents[trashId], self.pos)
-
-        elif (abs(yDistanceIncinerator) >= 2) & (self.carriesTrash == 1) & (yDistanceIncinerator < 0):
-            current_y -= 1
-            if (not self.model.grid.is_cell_empty((current_x, current_y))) & (abs(yDistanceIncinerator) < 2) & (
-                    abs(xDistanceIncinerator) < 2):
-                pass
-            else:
-                self.model.grid.move_agent(self, (current_x, current_y))
-                self.model.grid.move_agent(
-                    self.model.schedule.agents[trashId], self.pos)
 
         else:
             self.carriesTrash = 0
@@ -272,8 +256,10 @@ class Robot(Agent):
 
             else:
                 self.hasTrash = 0
+                self.model.grid.move_agent(self, save_pos)
 
     def step(self):
+        self.steps += 1
         current_x, current_y = self.pos
 
         if self.hasTrash != 1:
@@ -327,6 +313,7 @@ class Incinerador(Agent):
 
 
 class Maze(Model):
+
     def __init__(self, density=.10, stepslimit=10000, islegal=True):
         super().__init__()
 
@@ -337,6 +324,10 @@ class Maze(Model):
 
         self.schedule = RandomActivation(self)
         self.grid = MultiGrid(self.gridnum, self.gridnum, torus=False)
+        self.datacollector = DataCollector({
+            "PercentClean": lambda m: self.count_clean_cells() / (self.gridnum * self.gridnum),
+            "PercentTrash": lambda m: self.count_trash_recollected() / (self.gridnum * self.gridnum)
+        })
 
         robot = Robot(self, (0, 0), self.gridnum)
         robot1 = Robot(self, (self.gridnum - 1, 0), self.gridnum)
@@ -394,15 +385,24 @@ class Maze(Model):
                 self.grid.place_agent(trash, (x, y))
                 self.schedule.add(trash)
 
+    def count_clean_cells(self):
+        return sum(1 for x in range(self.grid.width) for y in range(self.grid.height)
+                   if len(self.grid.get_cell_list_contents((x, y))) == 0)
+
+    def count_trash_recollected(self):
+        return sum(agent.steps for agent in self.schedule.agents if isinstance(agent, Robot))
+
     def step(self):
-        if(self.schedule.time + 1 > self.stepslimit):
+        self.datacollector.collect(self)
+
+        if (self.schedule.time + 2 > self.stepslimit):
             self.running = False
         self.schedule.step()
 
 
 def agent_portrayal(agent):
     if type(agent) == Robot:
-        return {"Shape": "robot.png", "Layer": 0}
+        return {"Shape": "robot.png", "Layer": 0, "text": agent.steps}
     elif type(agent) == WallBlock:
         return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Blue", "Layer": 0}
     elif type(agent) == Trash:
@@ -417,7 +417,12 @@ def agent_portrayal(agent):
 
 grid = CanvasGrid(agent_portrayal, 51, 51, 700, 700)
 
-server = ModularServer(Maze, [grid], "Robot", {
-                       "density": Slider("Tree density", 0.45, 0.01, 1.0, 0.01), "stepslimit": Slider("Steps Limiter", 10000, 1, 20000, 10), "islegal": Checkbox("Enable 21 x 21", True)})
+chart = ChartModule([{"Label": "PercentTrash", "Color": "Red"}],
+                    data_collector_name="datacollector")
+clean_chart = ChartModule(
+    [{"Label": "PercentClean", "Color": "Grean"}], data_collector_name="datacollector")
+server = ModularServer(Maze, [grid, chart, clean_chart], "Robot", {"density": Slider("Trash Density", 0.45, 0.01, 1.0, 0.01), "stepslimit": Slider(
+    "Steps Limiter", 10000, 1, 20000, 10), "islegal": Checkbox("Enable 21 x 21", True)})
+
 server.port = 8522
 server.launch()
