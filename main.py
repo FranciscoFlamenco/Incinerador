@@ -6,6 +6,10 @@ from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import Slider
 from mesa.datacollection import DataCollector
 from mesa.visualization.modules import ChartModule
+from mesa.visualization.UserParam import Checkbox
+
+gridnum = 51
+
 
 class WallBlock(Agent):
     def __init__(self, model, pos):
@@ -26,7 +30,7 @@ class Trash(Agent):
 
 
 class RobotIncinerador(Agent):
-    def __init__(self, model, pos):
+    def __init__(self, model, pos, num):
         super().__init__(model.next_id(), model)
         self.pos = pos
         self.counter = 0
@@ -35,17 +39,21 @@ class RobotIncinerador(Agent):
         self.save_pos = (0, 0)
         self.trashId = 0
         self.carriesTrash = 1
+        self.gridnum = num
 
     def goToIncinerator(self, save_pos, trashId):
         if self.carriesTrash == 1:
-            agents_in_target_square = self.model.grid.get_cell_list_contents([(25, 25)])
+            agents_in_target_square = self.model.grid.get_cell_list_contents([
+                                                                             (int((self.gridnum - 1) / 2), int((self.gridnum - 1) / 2))])
             for agent in agents_in_target_square:
                 if isinstance(agent, Trash):
                     break
                     pass
             else:
-                self.model.grid.move_agent(self, (25, 25))
-                self.model.grid.move_agent(self.model.schedule.agents[trashId], self.pos)
+                self.model.grid.move_agent(
+                    self, (int((self.gridnum - 1) / 2), int((self.gridnum - 1) / 2)))
+                self.model.grid.move_agent(
+                    self.model.schedule.agents[trashId], self.pos)
                 self.carriesTrash = 0
         else:
             self.model.grid.move_agent(self, save_pos)
@@ -56,7 +64,7 @@ class RobotIncinerador(Agent):
             for i in range(len(self.model.schedule.agents)):
                 if isinstance(self.model.schedule.agents[i], Trash):
                     trash = self.model.schedule.agents[i].pos
-                    if (self.pos == trash) & (self.pos != (25, 25)):
+                    if (self.pos == trash) & (self.pos != (int((self.gridnum - 1) / 2), int((self.gridnum - 1) / 2))):
                         self.carriesTrash = 1
                         self.hasTrash = 1
                         self.trashId = i
@@ -95,7 +103,7 @@ class RobotIncinerador(Agent):
 
 
 class Robot(Agent):
-    def __init__(self, model, pos):
+    def __init__(self, model, pos, num):
         super().__init__(model.next_id(), model)
         self.pos = pos
         self.count = 1
@@ -103,73 +111,96 @@ class Robot(Agent):
         self.carriesTrash = 1
         self.hasTrash = 0
         self.trashId = 0
+
+        self.gridnum = num
         self.steps = 0
 
         if self.pos == (0, 0):
-            self.matrix = [[0 for _ in range(51)] for _ in range(51)]
+            self.matrix = [[0 for _ in range(self.gridnum + 1)]
+                           for _ in range(self.gridnum + 1)]
             for row in self.matrix:
-                row[25] = 1
+                row[int((self.gridnum - 1) / 2)] = 1
 
             # Creating the horizontal line
-            self.matrix[25] = [1] * 51
+            self.matrix[int((self.gridnum - 1) / 2)] = [1] * self.gridnum
 
-            self.matrix[24][24] = 1
-            self.matrix[26][24] = 1
-            self.matrix[24][26] = 1
-            self.matrix[26][26] = 1
+            self.matrix[int((self.gridnum - 1) / 2) -
+                        1][int((self.gridnum - 1) / 2) - 1] = 1
+            self.matrix[int((self.gridnum - 1) / 2) +
+                        1][int((self.gridnum - 1) / 2) - 1] = 1
+            self.matrix[int((self.gridnum - 1) / 2) -
+                        1][int((self.gridnum - 1) / 2) + 1] = 1
+            self.matrix[int((self.gridnum - 1) / 2) +
+                        1][int((self.gridnum - 1) / 2) + 1] = 1
             self.matrix[0][0] = 1
-            self.matrix[50][50] = 1
-            self.matrix[0][50] = 1
-            self.matrix[50][0] = 1
-        elif self.pos == (50, 0):
-            self.matrix = [[0 for _ in range(53)] for _ in range(53)]
+            self.matrix[(self.gridnum - 1)][self.gridnum - 1] = 1
+            self.matrix[0][(self.gridnum - 1)] = 1
+            self.matrix[(self.gridnum - 1)][0] = 1
+        elif self.pos == (self.gridnum - 1, 0):
+            self.matrix = [[0 for _ in range(self.gridnum+1)]
+                           for _ in range(self.gridnum+1)]
             for row in self.matrix:
-                row[25] = 1
+                row[int((self.gridnum - 1) / 2)] = 1
 
             # Creating the horizontal line
-            self.matrix[24] = [1] * 51
+            self.matrix[int((self.gridnum - 1) / 2)] = [1] * self.gridnum
 
-            self.matrix[24][24] = 1
-            self.matrix[26][24] = 1
-            self.matrix[24][26] = 1
-            self.matrix[26][26] = 1
-            self.matrix[25][24] = 1
+            self.matrix[int((self.gridnum - 1) / 2) -
+                        1][int((self.gridnum - 1) / 2) - 1] = 1
+            self.matrix[int((self.gridnum - 1) / 2) +
+                        1][int((self.gridnum - 1) / 2) - 1] = 1
+            self.matrix[int((self.gridnum - 1) / 2) -
+                        1][int((self.gridnum - 1) / 2) + 1] = 1
+            self.matrix[int((self.gridnum - 1) / 2) +
+                        1][int((self.gridnum - 1) / 2) + 1] = 1
+            self.matrix[int((self.gridnum - 1) / 2)
+                        ][int((self.gridnum - 1) / 2) - 1] = 1
             self.matrix[0][0] = 1
-            self.matrix[50][50] = 1
-            self.matrix[0][50] = 1
-            self.matrix[50][0] = 1
-        elif self.pos == (50, 50):
-            self.matrix = [[0 for _ in range(53)] for _ in range(53)]
+            self.matrix[(self.gridnum - 1)][(self.gridnum - 1)] = 1
+            self.matrix[0][(self.gridnum - 1)] = 1
+            self.matrix[(self.gridnum - 1)][0] = 1
+        elif self.pos == ((self.gridnum - 1), (self.gridnum - 1)):
+            self.matrix = [[0 for _ in range(self.gridnum+1)]
+                           for _ in range(self.gridnum+1)]
             for row in self.matrix:
-                row[24] = 1
+                row[int((self.gridnum - 1) / 2) - 1] = 1
 
             # Creating the horizontal line
-            self.matrix[24] = [1] * 51
+            self.matrix[int((self.gridnum - 1) / 2) - 1] = [1] * self.gridnum
 
-            self.matrix[24][24] = 1
-            self.matrix[26][24] = 1
-            self.matrix[24][26] = 1
-            self.matrix[26][26] = 1
+            self.matrix[int((self.gridnum - 1) / 2) -
+                        1][int((self.gridnum - 1) / 2) - 1] = 1
+            self.matrix[int((self.gridnum - 1) / 2) +
+                        1][int((self.gridnum - 1) / 2) - 1] = 1
+            self.matrix[int((self.gridnum - 1) / 2) -
+                        1][int((self.gridnum - 1) / 2) + 1] = 1
+            self.matrix[int((self.gridnum - 1) / 2) +
+                        1][int((self.gridnum - 1) / 2) + 1] = 1
             self.matrix[0][0] = 1
-            self.matrix[50][50] = 1
-            self.matrix[0][50] = 1
-            self.matrix[50][0] = 1
-        elif self.pos == (0, 50):
-            self.matrix = [[0 for _ in range(53)] for _ in range(53)]
+            self.matrix[(self.gridnum - 1)][(self.gridnum - 1)] = 1
+            self.matrix[0][(self.gridnum - 1)] = 1
+            self.matrix[(self.gridnum - 1)][0] = 1
+        elif self.pos == (0, (self.gridnum - 1)):
+            self.matrix = [[0 for _ in range(self.gridnum+1)]
+                           for _ in range(self.gridnum+1)]
             for row in self.matrix:
-                row[24] = 1
+                row[int((self.gridnum - 1) / 2) - 1] = 1
 
             # Creating the horizontal line
-            self.matrix[25] = [1] * 51
+            self.matrix[int((self.gridnum - 1) / 2)] = [1] * self.gridnum
 
-            self.matrix[24][24] = 1
-            self.matrix[26][24] = 1
-            self.matrix[24][26] = 1
-            self.matrix[26][26] = 1
+            self.matrix[int((self.gridnum - 1) / 2) -
+                        1][int((self.gridnum - 1) / 2) - 1] = 1
+            self.matrix[int((self.gridnum - 1) / 2) +
+                        1][int((self.gridnum - 1) / 2) - 1] = 1
+            self.matrix[int((self.gridnum - 1) / 2) -
+                        1][int((self.gridnum - 1) / 2) + 1] = 1
+            self.matrix[int((self.gridnum - 1) / 2) +
+                        1][int((self.gridnum - 1) / 2) + 1] = 1
             self.matrix[0][0] = 1
-            self.matrix[50][50] = 1
-            self.matrix[0][50] = 1
-            self.matrix[50][0] = 1
+            self.matrix[(self.gridnum - 1)][(self.gridnum - 1)] = 1
+            self.matrix[0][(self.gridnum - 1)] = 1
+            self.matrix[(self.gridnum - 1)][0] = 1
 
     #         estado incinerador = self.model.schedule.agents[5].estado
     # si estado incinerador es prendido:
@@ -177,17 +208,20 @@ class Robot(Agent):
     # else:
     #       mover a incinerador
 
-    def goToIncinerator(self, current_x, current_y, save_pos, trashId):
+    def goToIncinerator(self, current_x, current_y, save_pos, trashId, num):
+
         xDistancePos = save_pos[0] - current_x
         yDistancePos = save_pos[1] - current_y
 
-        xDistanceIncinerator = 25 - current_x
-        yDistanceIncinerator = 25 - current_y
+        xDistanceIncinerator = int((num - 1) / 2) - current_x
+        yDistanceIncinerator = int((num - 1) / 2) - current_y
 
         if self.carriesTrash == 1:
             if abs(xDistanceIncinerator) <= 2 and abs(yDistanceIncinerator) <= 2:
-                self.model.grid.move_agent(self, (25, 25))
-                self.model.grid.move_agent(self.model.schedule.agents[trashId], self.pos)
+                self.model.grid.move_agent(
+                    self, (int((self.gridnum - 1) / 2), int((self.gridnum - 1) / 2)))
+                self.model.grid.move_agent(
+                    self.model.schedule.agents[trashId], self.pos)
                 self.carriesTrash = 0
             else:
                 if xDistanceIncinerator > 0:
@@ -224,8 +258,6 @@ class Robot(Agent):
                 self.hasTrash = 0
                 self.model.grid.move_agent(self, save_pos)
 
-        
-
     def step(self):
         self.steps += 1
         current_x, current_y = self.pos
@@ -242,29 +274,35 @@ class Robot(Agent):
                         break
 
         if self.hasTrash == 1:
-            self.goToIncinerator(current_x, current_y, self.save_pos, self.trashId)
+            self.goToIncinerator(current_x, current_y,
+                                 self.save_pos, self.trashId, self.gridnum)
         else:
             possible_moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]
             for dx, dy in possible_moves:
                 possible_next_move = (current_x + dx, current_y + dy)
-                mat_coords = self.matrix[possible_next_move[0]][possible_next_move[1]]
+                mat_coords = self.matrix[possible_next_move[0]
+                                         ][possible_next_move[1]]
                 if mat_coords != 1 and not self.model.grid.out_of_bounds(possible_next_move):
                     next_move = possible_next_move
                     self.matrix[next_move[0]][next_move[1]] = 1
-                    self.model.grid.place_agent(WallBlock(self.model, self.pos), self.pos)
+                    self.model.grid.place_agent(
+                        WallBlock(self.model, self.pos), self.pos)
                     self.model.grid.move_agent(self, next_move)
                     break
 
 
 class Incinerador(Agent):
-    def __init__(self, model, pos):
+    def __init__(self, model, pos, num):
         super().__init__(model.next_id(), model)
         self.pos = pos
         self.type = 0
+        self.gridnum = num
 
     def step(self):
         self.type = 0
-        agents_in_target_square = self.model.grid.get_cell_list_contents([(25, 25)])
+        print(self.gridnum)
+        agents_in_target_square = self.model.grid.get_cell_list_contents([
+                                                                         (int((self.gridnum) / 2), int((self.gridnum) / 2))])
         for agent in agents_in_target_square:
             if isinstance(agent, Robot):
                 break
@@ -275,30 +313,39 @@ class Incinerador(Agent):
 
 
 class Maze(Model):
-    
-    def __init__(self, density=.10, stepslimit = 10000):
+
+    def __init__(self, density=.10, stepslimit=10000, islegal=True):
         super().__init__()
+
+        if(islegal):
+            self.gridnum = 21
+        else:
+            self.gridnum = 51
+
         self.schedule = RandomActivation(self)
-        self.grid = MultiGrid(51, 51, torus=False)
+        self.grid = MultiGrid(self.gridnum, self.gridnum, torus=False)
         self.datacollector = DataCollector({
-            "PercentClean": lambda m: self.count_clean_cells() / (self.grid.width * self.grid.height),
-            "PercentTrash": lambda m: self.count_trash_recollected() / (self.grid.width * self.grid.height)
+            "PercentClean": lambda m: self.count_clean_cells() / (self.gridnum * self.gridnum),
+            "PercentTrash": lambda m: self.count_trash_recollected() / (self.gridnum * self.gridnum)
         })
 
-        robot = Robot(self, (0, 0))
-        robot1 = Robot(self, (50, 0))
-        robot2 = Robot(self, (0, 50))
-        robot3 = Robot(self, (50, 50))
-        robot4 = RobotIncinerador(self, (26, 24))
+        robot = Robot(self, (0, 0), self.gridnum)
+        robot1 = Robot(self, (self.gridnum - 1, 0), self.gridnum)
+        robot2 = Robot(self, (0, self.gridnum - 1), self.gridnum)
+        robot3 = Robot(
+            self, (self.gridnum - 1, self.gridnum - 1), self.gridnum)
+        robot4 = RobotIncinerador(
+            self, (int((self.gridnum - 1) / 2) + 1, int((self.gridnum - 1) / 2) - 1), self.gridnum)
 
-        incinerador = Incinerador(self, (25, 25))
-        trash = Trash(self, (10, 1))
-        trash1 = Trash(self, (45, 45))
-        trash2 = Trash(self, (40, 12))
-        trash3 = Trash(self, (11, 1))
-        trash4 = Trash(self, (46, 45))
-        trash5 = Trash(self, (41, 12))
-        wallBlock = WallBlock(self, (0, 0))
+        incinerador = Incinerador(
+            self, (int((self.gridnum - 1) / 2), int((self.gridnum - 1) / 2)), self.gridnum)
+        trash = Trash(self, (int((self.gridnum - 1) / 2), 1))
+        trash1 = Trash(self, (15, 15))
+        trash2 = Trash(self, (int((self.gridnum - 1) / 2), 12))
+        trash3 = Trash(self, (int((self.gridnum - 1) / 2) + 1, 1))
+        trash4 = Trash(self, (16, 15))
+        trash5 = Trash(self, (int((self.gridnum - 1) / 2) + 1, 12))
+        wallblock = WallBlock(self, (0, 0))
 
         self.grid.place_agent(robot, robot.pos)
         self.grid.place_agent(robot1, robot1.pos)
@@ -329,27 +376,25 @@ class Maze(Model):
         self.schedule.add(trash4)
         self.schedule.add(trash5)
         self.schedule.add(incinerador)
-        
+
         self.stepslimit = stepslimit
 
-        for _,(x,y) in self.grid.coord_iter():
+        for _, (x, y) in self.grid.coord_iter():
             if (self.random.random() * 2) < density:
-                trash = Trash(self, (x,y))
-                self.grid.place_agent(trash, (x,y))
+                trash = Trash(self, (x, y))
+                self.grid.place_agent(trash, (x, y))
                 self.schedule.add(trash)
-                
-                
+
     def count_clean_cells(self):
         return sum(1 for x in range(self.grid.width) for y in range(self.grid.height)
                    if len(self.grid.get_cell_list_contents((x, y))) == 0)
-        
+
     def count_trash_recollected(self):
         return sum(agent.steps for agent in self.schedule.agents if isinstance(agent, Robot))
 
     def step(self):
-        self.schedule.step()
         self.datacollector.collect(self)
-        
+
         if (self.schedule.time + 2 > self.stepslimit):
             self.running = False
         self.schedule.step()
@@ -372,8 +417,12 @@ def agent_portrayal(agent):
 
 grid = CanvasGrid(agent_portrayal, 51, 51, 700, 700)
 
-chart = ChartModule([{"Label": "PercentTrash", "Color": "Red"}], data_collector_name= "datacollector")
-clean_chart = ChartModule([{"Label": "PercentClean", "Color": "Grean"}], data_collector_name="datacollector")
-server = ModularServer(Maze, [grid, chart, clean_chart], "Robot", {"density": Slider("Trash Density", 0.45, 0.01, 1.0, 0.01), "stepslimit": Slider("Steps Limiter", 10000, 1, 20000, 10)})
+chart = ChartModule([{"Label": "PercentTrash", "Color": "Red"}],
+                    data_collector_name="datacollector")
+clean_chart = ChartModule(
+    [{"Label": "PercentClean", "Color": "Grean"}], data_collector_name="datacollector")
+server = ModularServer(Maze, [grid, chart, clean_chart], "Robot", {"density": Slider("Trash Density", 0.45, 0.01, 1.0, 0.01), "stepslimit": Slider(
+    "Steps Limiter", 10000, 1, 20000, 10), "islegal": Checkbox("Enable 21 x 21", True)})
+
 server.port = 8522
 server.launch()
