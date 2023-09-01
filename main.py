@@ -415,7 +415,7 @@ def agent_portrayal(agent):
         return {"Shape": "rect", "w": 1, "h": 1, "Filled": "true", "Color": "Red", "Layer": 0}
 
 
-grid = CanvasGrid(agent_portrayal, 21, 21, 700, 700)
+grid = CanvasGrid(agent_portrayal, 51, 51, 700, 700)
 
 server = ModularServer(Maze, [grid], "Robot", {
                        "density": Slider("Tree density", 0.45, 0.01, 1.0, 0.01), "stepslimit": Slider("Steps Limiter", 10000, 1, 20000, 10), "islegal": Checkbox("Enable 21 x 21", True)})
