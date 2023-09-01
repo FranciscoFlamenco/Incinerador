@@ -106,7 +106,7 @@ class Robot(Agent):
         self.steps = 0
 
         if self.pos == (0, 0):
-            self.matrix = [[0 for _ in range(53)] for _ in range(53)]
+            self.matrix = [[0 for _ in range(51)] for _ in range(51)]
             for row in self.matrix:
                 row[25] = 1
 
@@ -276,17 +276,20 @@ class Incinerador(Agent):
 
 class Maze(Model):
     
-    def __init__(self, density=.10):
+    def __init__(self, density=.10, stepslimit = 10000):
         super().__init__()
         self.schedule = RandomActivation(self)
         self.grid = MultiGrid(51, 51, torus=False)
+        self.datacollector = DataCollector({
+            "PercentClean": lambda m: self.count_clean_cells() / (self.grid.width * self.grid.height),
+            "PercentTrash": lambda m: self.count_trash_recollected() / (self.grid.width * self.grid.height)
+        })
 
         robot = Robot(self, (0, 0))
         robot1 = Robot(self, (50, 0))
         robot2 = Robot(self, (0, 50))
         robot3 = Robot(self, (50, 50))
         robot4 = RobotIncinerador(self, (26, 24))
-        self.datacollector = DataCollector(model_reporters={"CleanCells": "count_clean_cells"})
 
         incinerador = Incinerador(self, (25, 25))
         trash = Trash(self, (10, 1))
@@ -326,6 +329,8 @@ class Maze(Model):
         self.schedule.add(trash4)
         self.schedule.add(trash5)
         self.schedule.add(incinerador)
+        
+        self.stepslimit = stepslimit
 
         for _,(x,y) in self.grid.coord_iter():
             if (self.random.random() * 2) < density:
@@ -337,10 +342,17 @@ class Maze(Model):
     def count_clean_cells(self):
         return sum(1 for x in range(self.grid.width) for y in range(self.grid.height)
                    if len(self.grid.get_cell_list_contents((x, y))) == 0)
+        
+    def count_trash_recollected(self):
+        return sum(agent.steps for agent in self.schedule.agents if isinstance(agent, Robot))
 
     def step(self):
         self.schedule.step()
         self.datacollector.collect(self)
+        
+        if (self.schedule.time + 2 > self.stepslimit):
+            self.running = False
+        self.schedule.step()
 
 
 def agent_portrayal(agent):
@@ -360,8 +372,8 @@ def agent_portrayal(agent):
 
 grid = CanvasGrid(agent_portrayal, 51, 51, 700, 700)
 
-chart = ChartModule([{"Label": "Trash Recollected", "Color": "Red"}, {"Label": "Clean Cells", "Color": "Green"}], data_collector_name= "datacollector")
-
-server = ModularServer(Maze, [grid, chart], "Robot", {"density": Slider("Trash Density", 0.45, 0.01, 1.0, 0.01)})
+chart = ChartModule([{"Label": "PercentTrash", "Color": "Red"}], data_collector_name= "datacollector")
+clean_chart = ChartModule([{"Label": "PercentClean", "Color": "Grean"}], data_collector_name="datacollector")
+server = ModularServer(Maze, [grid, chart, clean_chart], "Robot", {"density": Slider("Trash Density", 0.45, 0.01, 1.0, 0.01), "stepslimit": Slider("Steps Limiter", 10000, 1, 20000, 10)})
 server.port = 8522
 server.launch()
